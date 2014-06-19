@@ -16,7 +16,7 @@ DegreesC 100.0 |> isFever
 
 // equivalent ..
 isFever (DegreesC 100.0)
-DegreesF 103.0 |> isFever // best
+DegreesF 103.0 |> isFever // best 
 103.0 |> DegreesF |> isFever
 
 
