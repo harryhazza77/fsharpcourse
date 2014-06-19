@@ -1,0 +1,1 @@
+﻿//use partial application too
