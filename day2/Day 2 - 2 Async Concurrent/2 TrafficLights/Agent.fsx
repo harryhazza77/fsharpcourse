@@ -12,8 +12,10 @@ let chatAgent = Agent.Start(fun inbox ->
             let newMsgs = (u,m)::msgs
             return! loop newMsgs
         | PrintHtml -> 
+            printf "<ul>"
             msgs 
                 |> Seq.iter (fun (u,m) -> printf "<li><strong>%s</strong>%s</li>" u m)
+            printf "</ul>"
             return! loop msgs
     }
     loop [] )
