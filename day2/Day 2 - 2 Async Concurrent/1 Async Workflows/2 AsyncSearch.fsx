@@ -23,29 +23,38 @@ let getTitle (doc:HtmlDocument) =
 // ------------------------------------------------------------------
 
 /// Downloads page and returns the title and size in bytes
-let getTitleAndLength url = 
+let getTitleAndLength url = async {
   let wc = new WebClient()
-  let html = wc.DownloadString(Uri(url))
+  let! html = wc.AsyncDownloadString(Uri(url))
   let doc = HtmlDocument()
   doc.LoadHtml(html)
-  getTitle doc, html.Length 
+  return getTitle doc, html.Length }
 
 
 // ------------------------------------------------------------------
 // Download snippets in parallel using a thread for every snippet (!!)
 // ------------------------------------------------------------------
 
-let processSnippet index =  
+let processSnippet index = async {
   let url = sprintf "http://fssnip.net/%s" (FsSnip.createId index)
   try
-    let title, length = getTitleAndLength url
-    printfn "%s: %s (Size=%d)" url title length
+    let! title, length = getTitleAndLength url
+    printfn "%s %s" url System.Threading.Thread.CurrentThread.Name
+    return Some(title, length)
+//    printfn "%s: %s (Size=%d)" url title length
   with e ->
-    printfn "%s: Failed!" url 
+    return None }
+//    printfn "%s: Failed!" url }
 
-for i in 0 .. 40 do
-  let thr = Thread(fun () -> processSnippet i)
-  thr.Start()
+[0..40] 
+    |> Seq.map processSnippet
+    |> Async.Parallel
+    |> Async.RunSynchronously
+    |> Seq.choose (fun x -> x)
+    |> Seq.maxBy (fun (a,b) -> b)
+   
+//  let thr = Thread(fun () -> processSnippet i)
+//  thr.Start()
 
 // ------------------------------------------------------------------
 // TASK #1: Modify the above code to use Async.Parallel instead of

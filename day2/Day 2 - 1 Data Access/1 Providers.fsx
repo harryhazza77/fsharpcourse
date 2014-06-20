@@ -2,6 +2,7 @@
 #load "packages/FsLab.0.0.14-beta/FsLab.fsx"
 open FSharp.Data
 open FSharp.Charting
+open System.Linq
 
 // ----------------------------------------------------------------------------
 // Type provider introduction - WorldBank and R  
@@ -33,24 +34,45 @@ t.Rows
 |> Seq.length
 
 // TASK: Count how many Male & Female passangers survived and died
-t.Rows
-|> Seq.filter (fun r -> r.Survived && r.Survived && r.Sex = "male")
-|> Seq.length
+let survivedMales = 
+    t.Rows
+    |> Seq.filter (fun r -> r.Survived && r.Sex = "male")
+    |> Seq.length
 
-t.Rows
-|> Seq.filter (fun r -> r.Survived && r.Survived && r.Sex = "female")
-|> Seq.length
+let survidedFemales =
+    t.Rows
+    |> Seq.filter (fun r -> r.Survived && r.Sex = "female")
+    |> Seq.length
+
+let deadMales = 
+    t.Rows
+    |> Seq.filter (fun r -> not r.Survived && r.Sex = "male")
+    |> Seq.length
+
+let deadFemales =
+    t.Rows
+    |> Seq.filter (fun r -> not r.Survived && r.Sex = "female")
+    |> Seq.length
+
+let maleRatio = float survivedMales / float deadMales 
+let femaleRatio = float survidedFemales / float deadFemales
 // Can you create a chart showing the survival rates for males/females?
 
 // Hint: Here is how to create a simple chart!
-Chart.Pie [ ("Good", 10); ("Bad", 1)]
-
+Chart.Bar [ ("Males", maleRatio); ("Females", femaleRatio)]
 
 type Stocks = CsvProvider<"msft.csv">
 
+let aapl = Stocks.Load("aapl.csv")
 // TASK: Load the data from "aapl.csv" file
 
 // TASK: Filter the data to get only prices from 2013.
+
+let ``2013`` =
+    aapl.Rows
+        |> Seq.filter (fun r -> r.Date.Year = 2013)
+
+
 // Calculate the average price, minimal and maximal
 // price and the difference between minimal and maximal
 
@@ -62,17 +84,26 @@ type Stocks = CsvProvider<"msft.csv">
 // JSON type provider demo
 // ----------------------------------------------------------------------------
 
-
 // Get temperature in Madrid today!
-Http.Request("http://api.openweathermap.org/data/2.5/weather?units=metric&q=Madrid")
+type weather = JsonProvider<"http://api.openweathermap.org/data/2.5/weather?units=metric&q=Madrid">
 
-
+let url = "http://api.openweathermap.org/data/2.5/weather?units=metric&q="
+let getTempFromCity city = 
+    try
+        let temp = weather.Load(url + city).Main.Temp
+        Some(city, temp)
+    with 
+        | ex -> None
 // Prints all the capital cities in EU
-// TASK: Can you print the temperature in the capital too?
-for country in wb.Regions.``European Union``.Countries do
-  printfn "%s" country.CapitalCity
 
+wb.Regions.``European Union``.Countries
+    |> Seq.map (fun c ->  getTempFromCity c.CapitalCity)
+    |> Seq.toList
 
+wb.Regions.Africa.Countries.Where(fun a -> a.CapitalCity.Length > 10)
+   
+//for country in wb.Regions.``European Union``.Countries do
+ // printfn "%s %f" country.CapitalCity getTempFromCity
 
 // ----------------------------------------------------------------------------
 // Reading RSS feeds using XML provider
