@@ -1,0 +1,50 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Chat</title>
+  <script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.5.min.js"></script>
+  <script type="text/javascript">
+
+    function refresh() {
+      $.ajax({ type: "GET", url: "/chat", dataType: "text",
+        success: function (data) {
+          $("#output").html(data);
+        }
+      });
+      $.ajax({
+        type: "GET", url: "/users", dataType: "text",
+        success: function (data) {
+          $("#users").html(data);
+        }
+      });
+    };
+
+    function send() {
+      var msg = $("#textBox").val();
+      var name = $("#nameBox").val();
+      $.ajax({ type: "POST", url: "/post?name=" + name, dataType: "text", 
+          data: msg, success: refresh });
+      $("#textBox").val("");
+    }
+
+    setInterval(function () { refresh(); return true; }, 500);
+
+  </script>
+  <link rel="stylesheet" type="text/css" href="style.css" />
+</head>
+<body>
+  <div id="page">
+    <h1>Agent-based F# chat</h1>
+    <div id="output"></div>
+    <div id="input">
+    <input type="text" id="nameBox" />
+    <input type="text" id="textBox" />
+    <button onclick="send();">Send</button>
+    </div>
+    <div id="info">
+      <strong>Active users:</strong>
+      <span id="users"></span>
+    </div>
+  </div>
+</body>
+</html>

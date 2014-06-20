@@ -6,9 +6,9 @@ open FsWeb.Domain
 // ------------------------------------------------------------------
 
 let operatorName (operator:Operator option) = 
-  // TODO: Return the operator name or "(unknown)" 
-  // if the operator name is not available
-  "?"
+    match operator with
+    | None -> "?"
+    | Some name -> name
 
 let salesByOperator (history:History) = 
   history
@@ -21,12 +21,9 @@ let salesByOperator (history:History) =
 // ------------------------------------------------------------------
 
 let rec countProducts (products:Product list) =
-  // TODO: Implement recursive function 'countProducts'
-  // that counts the number of items in a given list of products
-  // (The function below is similar, but it generates a 
-  // new list - a list of counts instead of list of categories)
-  0
-
+    match products with
+    | [] -> 0
+    | product::rest -> 1 + countProducts rest
 
 let rec countProductsInCategories (categories:Category list) =
   match categories with
@@ -43,11 +40,26 @@ let rec countProductsInCategories (categories:Category list) =
 // ------------------------------------------------------------------
 
 let findProductCategory (product:Product) = 
+
   // TODO: Use functions 'Model.findCategory' and
   // 'Model.containsProduct' to get a category 
   // containing the given 'product'
   // (To make this run, just return the first one now...)
-  Data.categories |> Seq.head
+  //let category = Data.categories |> Seq.head
+  
+  let isProdInCat prod cat = 
+     let name, products = cat
+     Model.containsProduct prod products
+    
+  let rec findCat categories =
+     match categories with
+     | [] -> failwith "not found"
+     | cat::rest -> 
+        if isProdInCat product cat 
+        then cat
+        else findCat rest
+
+  findCat Data.categories        
 
 let purchasedByCategory (history:History) =
   // Obtain a list of all individual product sales from the history
